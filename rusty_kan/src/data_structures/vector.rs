@@ -1,4 +1,4 @@
-use std::ops::{Add, Sub, Mul, Div, Index, IndexMut};
+use std::{ops::{Add, Div, Index, IndexMut, Mul, Sub}, iter::{Iterator, Map}};
 use serde::{Serialize, Deserialize};
 use crate::data_structures::matrix::Matrix;
 use rand::Rng;
@@ -161,5 +161,13 @@ impl Vector {
     /// Convert the vector to a matrix.
     pub fn to_matrix(&self) -> Matrix {
         Matrix::new(vec![self.clone()])
+    }
+}
+
+impl Iterator for Vector {
+    type Item = f64;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.elements.pop()
     }
 }
