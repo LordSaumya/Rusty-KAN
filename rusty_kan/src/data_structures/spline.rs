@@ -1,4 +1,3 @@
-use serde::{Serialize, Deserialize};
 use crate::data_structures::vector::Vector;
 
 /// A B-spline is a piecewise polynomial function that is used as a parameterised version of a univariate learnable activation function in a KAN.
@@ -8,7 +7,7 @@ use crate::data_structures::vector::Vector;
 /// The basis function is a recursive function that calculates the value of the B-spline at a given point.
 /// The eval method calculates the value of the B-spline at a given point by summing the control points multiplied by the basis function. 
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct BSpline {
     pub control_points: Vec<Vector>, // Coefficients to be trained
     pub knots: Vec<f64>,
@@ -16,7 +15,8 @@ pub struct BSpline {
 }
 
 impl BSpline {
-    pub fn new(control_points: Vec<Vector>, knots: Vec<f64>, degree: usize) -> BSpline {
+    pub fn new(control_points: Vec<Vector>, degree: usize) -> BSpline {
+        let knots: Vec<f64> = (0..control_points.len() + degree + 1).map(|x| (x as f64)/(control_points.len() as f64 + degree as f64)).collect(); // Uniform knots
         BSpline { control_points, knots, degree }
     }
 
