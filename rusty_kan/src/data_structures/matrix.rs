@@ -1,12 +1,11 @@
 use std::ops::{Add, Sub, Mul, Index, IndexMut};
-use serde::{Serialize, Deserialize};
 use crate::data_structures::vector::Vector;
 use rand::Rng;
 
 /// A matrix is a vector of vectors.
 /// It is represented as a two-dimensional array of numbers.
 /// The matrix struct implements basic operations such as addition, subtraction, multiplication, and division.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Matrix {
     pub rows: Vec<Vector>,
 }
@@ -15,6 +14,9 @@ impl Add<Matrix> for Matrix {
     type Output = Matrix;
 
     fn add(self, other: Matrix) -> Matrix {
+        if self.shape() != other.shape() {
+            panic!("Matrices must have the same shape for addition.");
+        }
         Matrix { rows: self.rows.iter().zip(other.rows.iter()).map(|(a, b)| a + b).collect() }
     }
 }
@@ -23,6 +25,9 @@ impl Add<&Matrix> for &Matrix {
     type Output = Matrix;
 
     fn add(self, other: &Matrix) -> Matrix {
+        if self.shape() != other.shape() {
+            panic!("Matrices must have the same shape for addition.");
+        }
         Matrix { rows: self.rows.iter().zip(other.rows.iter()).map(|(a, b)| a + b).collect() }
     }
 }
@@ -31,6 +36,9 @@ impl Sub<Matrix> for Matrix {
     type Output = Matrix;
 
     fn sub(self, other: Matrix) -> Matrix {
+        if self.shape() != other.shape() {
+            panic!("Matrices must have the same shape for subtraction.");
+        }
         Matrix { rows: self.rows.iter().zip(other.rows.iter()).map(|(a, b)| a - b).collect() }
     }
 }
@@ -39,6 +47,9 @@ impl Sub<&Matrix> for &Matrix {
     type Output = Matrix;
 
     fn sub(self, other: &Matrix) -> Matrix {
+        if self.shape() != other.shape() {
+            panic!("Matrices must have the same shape for subtraction.");
+        }
         Matrix { rows: self.rows.iter().zip(other.rows.iter()).map(|(a, b)| a - b).collect() }
     }
 }
@@ -63,6 +74,9 @@ impl Mul<Vector> for Matrix {
     type Output = Vector;
 
     fn mul(self, other: Vector) -> Vector {
+        if self.rows[0].elements.len() != other.elements.len() {
+            panic!("The number of columns in the first matrix must be equal to the number of elements in the vector for multiplication.");
+        }
         Vector { elements: self.rows.iter().map(|row| row.elements.iter().zip(other.elements.iter()).map(|(a, b)| a * b).sum()).collect() }
     }
 }
@@ -71,6 +85,9 @@ impl Mul<&Vector> for &Matrix {
     type Output = Vector;
 
     fn mul(self, other: &Vector) -> Vector {
+        if self.rows[0].elements.len() != other.elements.len() {
+            panic!("The number of columns in the first matrix must be equal to the number of elements in the vector for multiplication.");
+        }
         Vector { elements: self.rows.iter().map(|row| row.elements.iter().zip(other.elements.iter()).map(|(a, b)| a * b).sum()).collect() }
     }
 }
@@ -79,6 +96,9 @@ impl Mul<Matrix> for Matrix {
     type Output = Matrix;
 
     fn mul(self, other: Matrix) -> Matrix {
+        if self.rows[0].elements.len() != other.rows.len() {
+            panic!("The number of columns in the first matrix must be equal to the number of rows in the second matrix for multiplication.");
+        }
         let mut result = vec![];
         for i in 0..self.rows.len() {
             let mut row = vec![];
@@ -99,6 +119,9 @@ impl Mul<&Matrix> for &Matrix {
     type Output = Matrix;
 
     fn mul(self, other: &Matrix) -> Matrix {
+        if self.rows[0].elements.len() != other.rows.len() {
+            panic!("The number of columns in the first matrix must be equal to the number of rows in the second matrix for multiplication.");
+        }
         let mut result = vec![];
         for i in 0..self.rows.len() {
             let mut row = vec![];
@@ -165,7 +188,7 @@ impl Matrix {
     /// Create a new matrix with the given size and all elements set to random values.
     pub fn random(rows: usize, cols: usize) -> Matrix {
         let mut rng = rand::thread_rng();
-        Matrix { rows: vec![Vector { elements: (0..cols).map(|_| rng.gen_range(-1.0..1.0)).collect() }; rows] }
+        Matrix { rows: vec![Vector { elements: (0..cols).map(|_| rng.gen_range(0.0..1.0)).collect() }; rows] }
     }
 
     /// Create a new matrix with the given size and all elements set to one.
@@ -211,28 +234,24 @@ impl Matrix {
 
     /// Sets the elements in the given row to the given vector.
     pub fn set_row(&mut self, row: usize, vector: Vector) {
+        if vector.elements.len() != self.rows[row].elements.len() {
+            panic!("The number of elements in the vector must be equal to the number of columns in the matrix.");
+        }
         self.rows[row] = vector;
     }
 
     /// Sets the elements in the given column to the given vector.
     pub fn set_col(&mut self, col: usize, vector: Vector) {
+        if vector.elements.len() != self.rows.len() {
+            panic!("The number of elements in the vector must be equal to the number of rows in the matrix.");
+        }
         for i in 0..self.rows.len() {
             self.rows[i].elements[col] = vector.elements[i];
         }
-    }
-    
-    /// Returns a vector of the rows in the matrix.
-    pub fn get_rows(&self) -> Vec<Vector> {
-        self.rows.clone()
     }
 
     /// Returns a column in the matrix.
     pub fn get_col(&self, col: usize) -> Vector {
         Vector { elements: self.rows.iter().map(|row| row.elements[col]).collect() }
-    }
-
-    /// Returns a vector of the columns in the matrix.
-    pub fn get_cols(&self) -> Vec<Vector> {
-        (0..self.shape().1).map(|i| self.get_col(i)).collect()
     }
 }
