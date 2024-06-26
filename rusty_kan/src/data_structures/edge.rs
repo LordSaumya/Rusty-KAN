@@ -1,13 +1,13 @@
 use crate::data_structures::{vector::Vector, spline::BSpline, matrix::Matrix};
-use serde::{Serialize, Deserialize};
 
 /// An edge is a connection between two nodes in a graph.
-/// It is represented as an index in the origin layer, an index in the destination layer, and a spline.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// It is represented as an index in the origin layer, an index in the destination layer, a layer index corresponding to the origin layer, and a spline.
+#[derive(Debug, Clone)]
 pub struct Edge {
     pub start: usize,
     pub end: usize,
     pub spline: BSpline,
+    pub layer: usize,
     pub gradient: Vector, // To store gradients for control points
 }
 
@@ -22,6 +22,8 @@ impl Edge {
     /// 
     /// * `spline` - A B-spline that represents the edge.
     /// 
+    /// * `layer` - A layer index corresponding to the origin layer.
+    /// 
     /// # Returns
     /// 
     /// * An edge with the given start index, end index, and spline.
@@ -31,12 +33,13 @@ impl Edge {
     /// ```
     /// let start = 0;
     /// let end = 1;
+    /// let layer = 0;
     /// let spline = BSpline::new(control_points, knots, degree);
-    /// let edge = Edge::new(start, end, spline);
+    /// let edge = Edge::new(start, end, spline, layer);
     /// ```
-    pub fn new(start: usize, end: usize, spline: BSpline) -> Edge {
+    pub fn new(start: usize, end: usize, spline: BSpline, layer: usize) -> Edge {
         let gradient: Vector = Vector { elements: vec![0.0; spline.control_points.len()] };
-        Edge { start, end, spline, gradient }
+        Edge { start, end, spline, gradient, layer }
     }
 
     /// The forward pass computes the value of the spline at the given parameter value t.
@@ -52,7 +55,7 @@ impl Edge {
     /// # Example
     /// 
     /// ```
-    /// let edge = Edge::new(start, end, spline);
+    /// let edge = Edge::new(start, end, spline, layer);
     /// let t = 0.5;
     /// let value = edge.forward(t);
     /// ```
@@ -73,7 +76,7 @@ impl Edge {
     /// # Example
     /// 
     /// ```
-    /// let edge = Edge::new(start, end, spline);
+    /// let edge = Edge::new(start, end, spline, layer);
     /// let inputs = Vector::new(vec![0.0, 0.5, 1.0]);
     /// let values = edge.forward_batch(inputs);
     /// ```
@@ -93,7 +96,7 @@ impl Edge {
     /// # Example
     /// 
     /// ```
-    /// let edge = Edge::new(start, end, spline);
+    /// let edge = Edge::new(start, end, spline, layer);
     /// let t = 0.5;
     /// let upstream_gradient = Vector::new(vec![1.0, 0.0, 0.0]);
     /// edge.backward(t, &upstream_gradient);
@@ -117,7 +120,7 @@ impl Edge {
     /// # Example
     /// 
     /// ```
-    /// let edge = Edge::new(start, end, spline);
+    /// let edge = Edge::new(start, end, spline, layer);
     /// let inputs = Vector::new(vec![0.0, 0.5, 1.0]);
     /// let upstream_gradients = Matrix::new(vec![Vector::new(vec![1.0, 0.0, 0.0]), Vector::new(vec![0.0, 1.0, 0.0]), Vector::new(vec![0.0, 0.0, 1.0])]);
     /// edge.backward_batch(inputs, &upstream_gradients);
