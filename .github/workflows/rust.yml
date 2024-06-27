@@ -18,6 +18,7 @@ jobs:
     - uses: actions/checkout@v4
     - name: Build
       run: cargo build --verbose
+      working-directory: ./rusty_kan
     - name: Run tests
       run: cargo test --verbose
-          
+      working-directory: ./rusty_kan
