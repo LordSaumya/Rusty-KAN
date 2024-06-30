@@ -81,8 +81,9 @@ impl Edge {
     /// let values = edge.forward_batch(inputs);
     /// ```
     pub fn forward_batch(&self, inputs: Vector) -> Matrix {
-        let result: Vec<Vector> = inputs.map(|t| self.spline.eval(t)).collect();
-        Matrix { rows: result }
+        let mut result: Vec<Vector> = inputs.map(|t| self.spline.eval(t)).collect();
+        result.reverse();
+        Matrix { rows: result}
     }
 
     /// The backward pass computes the gradient of the spline with respect to the control points.
