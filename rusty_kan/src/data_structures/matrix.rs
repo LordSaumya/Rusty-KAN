@@ -255,3 +255,13 @@ impl Matrix {
         Vector { elements: self.rows.iter().map(|row| row.elements[col]).collect() }
     }
 }
+
+impl std::fmt::Display for Matrix {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let mut result = String::new();
+        for row in &self.rows {
+            result.push_str(&format!("{}\n", row));
+        }
+        write!(f, "{}", result)
+    }
+}
