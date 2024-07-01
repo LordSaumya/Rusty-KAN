@@ -154,3 +154,10 @@ fn vector_to_matrix_pass() {
     let c = Matrix::new(vec![a.clone()]);
     assert_eq!(b, c);
 }
+
+#[test]
+fn vector_push_pass() {
+    let mut a = Vector { elements: vec![1.0, 2.0, 3.0] };
+    a.push(4.0);
+    assert_eq!(a.elements, vec![1.0, 2.0, 3.0, 4.0]);
+}

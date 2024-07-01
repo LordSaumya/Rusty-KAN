@@ -176,6 +176,11 @@ impl Vector {
     pub fn to_matrix(&self) -> Matrix {
         Matrix::new(vec![self.clone()])
     }
+
+    /// Add an element to the vector.
+    pub fn push(&mut self, element: f64) {
+        self.elements.push(element);
+    }
 }
 
 impl Iterator for Vector {
@@ -183,5 +188,18 @@ impl Iterator for Vector {
 
     fn next(&mut self) -> Option<Self::Item> {
         self.elements.pop()
+    }
+}
+
+impl std::fmt::Display for Vector {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        for (i, element) in self.elements.iter().enumerate() {
+            if i == 0 {
+                write!(f, "[{}", element)?;
+            } else {
+                write!(f, ", {}", element)?;
+            }
+        }
+        write!(f, "]")
     }
 }
