@@ -66,6 +66,18 @@ fn spline_eval_pass() {
 }
 
 #[test]
+#[should_panic]
+fn spline_eval_fail() {
+    let control_points: Vec<Vector> = vec![Vector { elements: vec![1.0, 2.0] }, Vector { elements: vec![3.0, 4.0] }, Vector { elements: vec![5.0, 6.0] }];
+    let degree: usize = 2;
+    let knots: Vec<f64> = vec![0.0, 0.2, 0.4, 0.6, 0.8, 1.0];
+    let spline: BSpline = BSpline { control_points: control_points.clone(), knots: knots.clone(), degree: degree.clone() };
+
+    // t < 0.0 -> should fail
+    let _ = spline.eval(-0.5);
+}
+
+#[test]
 fn spline_basis_pass() {
     let control_points: Vec<Vector> = vec![Vector { elements: vec![1.0, 2.0] }, Vector { elements: vec![3.0, 4.0] }, Vector { elements: vec![5.0, 6.0] }];
     let knots: Vec<f64> = vec![0.0, 0.2, 0.4, 0.6, 0.8, 1.0];
@@ -93,4 +105,16 @@ fn spline_basis_pass() {
     // N 2, 2 (0.45) = 0.03125
     let result5: f64 = spline.basis(2, 2, 0.45);
     assert_is_close!(result5, 0.03125, 1e-3);
+}
+
+#[test]
+#[should_panic]
+fn spline_basis_fail() {
+    let control_points: Vec<Vector> = vec![Vector { elements: vec![1.0, 2.0] }, Vector { elements: vec![3.0, 4.0] }, Vector { elements: vec![5.0, 6.0] }];
+    let degree: usize = 2;
+    let knots: Vec<f64> = vec![0.0, 0.2, 0.4, 0.6, 0.8, 1.0];
+    let spline: BSpline = BSpline { control_points: control_points.clone(), knots: knots.clone(), degree: degree.clone() };
+
+    // i > degree -> should fail
+    let _ = spline.basis(3, 2, 0.5);
 }

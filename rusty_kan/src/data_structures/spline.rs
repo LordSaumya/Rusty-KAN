@@ -15,12 +15,36 @@ pub struct BSpline {
 }
 
 impl BSpline {
+    /// Create a new B-spline with a given list of control points and degree.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `control_points` - A vector of control points.
+    /// 
+    /// * `degree` - The degree of the B-spline.
+    /// 
+    /// # Returns
+    /// 
+    /// * A B-spline with the given list of control points, specified degree, and uniform knots.
     pub fn new(control_points: Vec<Vector>, degree: usize) -> BSpline {
         let knots: Vec<f64> = (0..control_points.len() + degree + 1).map(|x| (x as f64)/(control_points.len() as f64 + degree as f64)).collect(); // Uniform knots
         BSpline { control_points, knots, degree }
     }
 
+    /// Evaluate the B-spline at a given parameter value t.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `t` - A parameter value between 0 and 1.
+    /// 
+    /// # Returns
+    /// 
+    /// * The value of the B-spline at the given parameter value t.
     pub fn eval(&self, t: f64) -> Vector {
+        if t < 0.0 || t > 1.0 {
+            panic!("Parameter value t must be between 0 and 1.");
+        }
+
         let n: usize = self.control_points.len();
         let mut result: Vector = Vector { elements: vec![0.0; self.control_points[0].elements.len()] };
         for i in 0..n {
@@ -29,17 +53,34 @@ impl BSpline {
         result
     }
 
-    pub fn basis(&self, i: usize, degree: usize, x: f64) -> f64 {
+    /// Calculate the basis function at a given index, degree, and parameter value t.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `i` - An index.
+    /// 
+    /// * `degree` - The degree of the B-spline.
+    /// 
+    /// * `t` - A parameter value between 0 and 1.
+    /// 
+    /// # Returns
+    /// 
+    /// * The value of the basis function at the given index, degree, and parameter value t.
+    pub fn basis(&self, i: usize, degree: usize, t: f64) -> f64 {
+        if t < 0.0 || t > 1.0 {
+            panic!("Parameter value t must be between 0 and 1.");
+        }
+
         if degree == 0 {
-            return if self.knots[i] <= x && x < self.knots[i + 1] { 1.0 } else { 0.0 };
+            return if self.knots[i] <= t && t < self.knots[i + 1] { 1.0 } else { 0.0 };
         } else {
             let left: f64 = if self.knots[i + degree] != self.knots[i] {
-                (x - self.knots[i]) / (self.knots[i + degree] - self.knots[i]) * self.basis(i, degree - 1, x)
+                (t - self.knots[i]) / (self.knots[i + degree] - self.knots[i]) * self.basis(i, degree - 1, t)
             } else {
                 0.0
             };
             let right: f64 = if self.knots[i + degree + 1] != self.knots[i + 1] {
-                (self.knots[i + degree + 1] - x) / (self.knots[i + degree + 1] - self.knots[i + 1]) * self.basis(i + 1, degree - 1, x)
+                (self.knots[i + degree + 1] - t) / (self.knots[i + degree + 1] - self.knots[i + 1]) * self.basis(i + 1, degree - 1, t)
             } else {
                 0.0
             };
