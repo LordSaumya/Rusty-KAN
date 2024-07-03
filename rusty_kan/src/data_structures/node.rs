@@ -1,5 +1,5 @@
 use std::{cell::RefCell, rc::Rc};
-use crate::data_structures::{vector::Vector, edge::Edge, layer::Layer};
+use crate::data_structures::{vector::Vector, edge::Edge};
 
 /// A node is an intersection of edges in the network.
 /// It is represented as a list of incoming edges, a list of outgoing edges, and a layer index.
@@ -72,10 +72,14 @@ impl Node {
     /// # Arguments
     /// 
     /// * `inputs` - A vector of values from the incoming edges.
-    pub fn forward(&self, inputs: &Vector) -> Vector {
-        let mut result: Vector = Vector::zeros(self.incoming[0].borrow().spline.control_points[0].elements.len());
-        for (edge, &input) in self.incoming.iter().zip(inputs.elements.iter()) {
-            result = result + edge.borrow().forward(input);
+    /// 
+    /// # Returns
+    /// 
+    /// * The sum of the incoming activations.
+    pub fn forward(&mut self, inputs: &Vector) -> f64 {
+        let mut result: f64 = 0.0;
+        for (i, edge) in self.incoming.iter().enumerate() {
+            result += edge.borrow_mut().forward(inputs[i]);
         }
         result
     }
