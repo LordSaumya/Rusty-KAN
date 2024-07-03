@@ -5,7 +5,7 @@ use rand::Rng;
 /// A vector is a one-dimensional array of numbers.
 /// It is represented as a list of elements.
 /// The vector struct implements basic operations such as addition, subtraction, multiplication, and division.
-/// It also provides methods to calculate the dot product, cross product, element-wise product, and convert to a matrix.
+/// It also provides methods to calculate the dot product, element-wise product, and convert to a matrix.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Vector {
     pub elements: Vec<f64>,
