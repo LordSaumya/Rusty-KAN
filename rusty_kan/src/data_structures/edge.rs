@@ -1,4 +1,4 @@
-use crate::data_structures::{vector::Vector, spline::BSpline, matrix::Matrix};
+use crate::data_structures::{vector::Vector, spline::BSpline};
 
 /// An edge is a connection between two nodes in a graph.
 /// It is represented as an index in the origin layer, an index in the destination layer, a layer index corresponding to the origin layer, and a spline.
@@ -42,7 +42,7 @@ impl Edge {
         Edge { start, end, spline, gradient, layer }
     }
 
-    /// The forward pass computes the value of the spline at the given parameter value t.
+    /// The forward pass computes the value of the spline at the given parameter value t and adds the value of the basis function (sigmoid linear unit).
     /// 
     /// # Arguments
     /// 
@@ -50,7 +50,7 @@ impl Edge {
     /// 
     /// # Returns
     /// 
-    /// * A vector representing the value of the spline at the given parameter value t.
+    /// * A scalar representing the value of the spline at the given parameter value t.
     /// 
     /// # Example
     /// 
@@ -59,8 +59,8 @@ impl Edge {
     /// let t = 0.5;
     /// let value = edge.forward(t);
     /// ```
-    pub fn forward(&self, t: f64) -> Vector {
-        self.spline.eval(t)
+    pub fn forward(&mut self, t: f64) -> f64 {
+        self.spline.eval(t) + silu(t)
     }
 
     /// The forward batch pass computes the value of the spline at the given parameter values.
@@ -71,7 +71,7 @@ impl Edge {
     /// 
     /// # Returns
     /// 
-    /// * A matrix representing the values of the spline at the given parameter values.
+    /// * A vector representing the values of the spline at the given parameter values.
     /// 
     /// # Example
     /// 
@@ -80,10 +80,10 @@ impl Edge {
     /// let inputs = Vector::new(vec![0.0, 0.5, 1.0]);
     /// let values = edge.forward_batch(inputs);
     /// ```
-    pub fn forward_batch(&self, inputs: Vector) -> Matrix {
-        let mut result: Vec<Vector> = inputs.map(|t| self.spline.eval(t)).collect();
+    pub fn forward_batch(&mut self, inputs: Vector) -> Vector {
+        let mut result: Vec<f64> = inputs.map(|t| self.spline.eval(t) + silu(t)).collect();
         result.reverse();
-        Matrix { rows: result}
+        Vector::new(result)
     }
 
     /// The backward pass computes the gradient of the spline with respect to the control points.
@@ -103,35 +103,66 @@ impl Edge {
     /// edge.backward(t, &upstream_gradient);
     /// ```
     pub fn backward(&mut self, t: f64, upstream_gradient: &Vector) -> Result<(), &'static str> {
+        if t < 0.0 || t > 1.0 {
+            panic!("Parameter value t must be between 0 and 1.");
+        }
+        if upstream_gradient.elements.len() != self.spline.control_points.len() {
+            panic!("The number of elements in the upstream gradient must be equal to the number of control points in the spline.");
+        }
+
         let n: usize = self.spline.control_points.len();
         for i in 0..n {
-            self.gradient = &self.gradient + &(upstream_gradient * self.spline.basis(i, self.spline.degree, t));
+            self.gradient[i] = self.spline.basis(i, self.spline.degree, t) * upstream_gradient[i];
         }
+        
         Ok(())
     }
 
-    /// The backward batch pass computes the gradient of the spline with respect to the control points for a batch of parameter values.
+    /// Uses the stored gradient of the spline with respect to the control points to update the control points.
     /// 
     /// # Arguments
     /// 
-    /// * `inputs` - A vector of parameter values between 0 and 1.
+    /// * `learning_rate` - A scalar representing the learning rate.
     /// 
-    /// * `upstream_gradients` - A matrix representing the gradients of the loss with respect to the values of the spline at the given parameter values.
+    /// # Returns
+    /// 
+    /// * A result indicating whether the update was successful.
     /// 
     /// # Example
     /// 
     /// ```
     /// let edge = Edge::new(start, end, spline, layer);
-    /// let inputs = Vector::new(vec![0.0, 0.5, 1.0]);
-    /// let upstream_gradients = Matrix::new(vec![Vector::new(vec![1.0, 0.0, 0.0]), Vector::new(vec![0.0, 1.0, 0.0]), Vector::new(vec![0.0, 0.0, 1.0])]);
-    /// edge.backward_batch(inputs, &upstream_gradients);
+    /// let learning_rate = 0.01;
+    /// edge.update_weights(learning_rate);
     /// ```
     pub fn update_weights(&mut self, learning_rate: f64) -> Result<(), &'static str> {
-        for i in 0..self.spline.control_points.len() {
-            self.spline.control_points[i] = &self.spline.control_points[i] - &(&self.gradient * learning_rate);
+        if learning_rate <= 0.0 {
+            panic!("The learning rate must be greater than 0.");
         }
-        // Reset the gradient after the update
+        // control points = control points - learning_rate * gradient
+        self.spline.control_points = &self.spline.control_points - &(&self.gradient * learning_rate);
+        // Reset gradient
         self.gradient = Vector { elements: vec![0.0; self.spline.control_points.len()] };
         Ok(())
     }
+}
+
+/// The Sigmoid Linear Unit (SiLU) activation function.
+/// 
+/// # Arguments
+/// 
+/// * `x` - A scalar.
+/// 
+/// # Returns
+/// 
+/// * The SiLU of the scalar x.
+/// 
+/// # Example
+/// 
+/// ```
+/// let x = 0.5;
+/// let silu = silu(x);
+/// ```
+fn silu(x: f64) -> f64 {
+    x / (1.0 + (-x).exp())
 }
