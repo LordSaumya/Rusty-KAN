@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use crate::data_structures::vector::Vector;
 
 /// A B-spline is a piecewise polynomial function that is used as a parameterised version of a univariate learnable activation function in a KAN.
@@ -9,13 +10,14 @@ use crate::data_structures::vector::Vector;
 
 #[derive(Debug, Clone)]
 pub struct BSpline {
-    pub control_points: Vec<Vector>, // Coefficients to be trained
-    pub knots: Vec<f64>,
+    pub control_points: Vector, // Coefficients to be trained
+    pub knots: Vector,
     pub degree: usize,
+    pub memo: HashMap<String, f64>,
 }
 
 impl BSpline {
-    /// Create a new B-spline with a given list of control points and degree.
+    /// Create a new 1D B-spline with a given list of control points and degree.
     /// 
     /// # Arguments
     /// 
@@ -26,9 +28,10 @@ impl BSpline {
     /// # Returns
     /// 
     /// * A B-spline with the given list of control points, specified degree, and uniform knots.
-    pub fn new(control_points: Vec<Vector>, degree: usize) -> BSpline {
-        let knots: Vec<f64> = (0..control_points.len() + degree + 1).map(|x| (x as f64)/(control_points.len() as f64 + degree as f64)).collect(); // Uniform knots
-        BSpline { control_points, knots, degree }
+    pub fn new(control_points: Vector, degree: usize) -> BSpline {
+        let n: usize = control_points.elements.len();
+        let knots: Vector = Vector { elements: (0..n + degree + 1).map(|i| i as f64 / (n + degree) as f64).collect() };
+        BSpline { control_points, knots, degree, memo: HashMap::new() }
     }
 
     /// Evaluate the B-spline at a given parameter value t.
@@ -40,15 +43,15 @@ impl BSpline {
     /// # Returns
     /// 
     /// * The value of the B-spline at the given parameter value t.
-    pub fn eval(&self, t: f64) -> Vector {
+    pub fn eval(&mut self, t: f64) -> f64 {
         if t < 0.0 || t > 1.0 {
             panic!("Parameter value t must be between 0 and 1.");
         }
 
         let n: usize = self.control_points.len();
-        let mut result: Vector = Vector { elements: vec![0.0; self.control_points[0].elements.len()] };
+        let mut result: f64 = 0.0;
         for i in 0..n {
-            result = result + &self.control_points[i] * self.basis(i, self.degree, t);
+            result += self.control_points.elements[i] * self.basis(i, self.degree, t);
         }
         result
     }
@@ -66,7 +69,11 @@ impl BSpline {
     /// # Returns
     /// 
     /// * The value of the basis function at the given index, degree, and parameter value t.
-    pub fn basis(&self, i: usize, degree: usize, t: f64) -> f64 {
+    pub fn basis(&mut self, i: usize, degree: usize, t: f64) -> f64 {
+        let hashmap_key: String = i.to_string() + " " + &degree.to_string() + " " + &t.to_string();
+        if let Some(&result) = self.memo.get(hashmap_key.as_str()) {
+            return result;
+        }
         if t < 0.0 || t > 1.0 {
             panic!("Parameter value t must be between 0 and 1.");
         }
@@ -84,6 +91,7 @@ impl BSpline {
             } else {
                 0.0
             };
+            self.memo.insert(hashmap_key, left + right);
             left + right
         }
     }
