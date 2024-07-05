@@ -11,6 +11,18 @@ pub struct Vector {
     pub elements: Vec<f64>,
 }
 
+impl From<Vec<f64>> for Vector {
+    fn from(elements: Vec<f64>) -> Vector {
+        Vector { elements }
+    }
+}
+
+impl From<&Vec<f64>> for Vector {
+    fn from(elements: &Vec<f64>) -> Vector {
+        Vector { elements: elements.clone() }
+    }
+}
+
 impl Add<Vector> for Vector {
     type Output = Vector;
 
