@@ -254,6 +254,11 @@ impl Matrix {
     pub fn get_col(&self, col: usize) -> Vector {
         Vector { elements: self.rows.iter().map(|row| row.elements[col]).collect() }
     }
+
+    /// Adds a row to the matrix.
+    pub fn push(&mut self, row: Vector) {
+        self.rows.push(row);
+    }
 }
 
 impl std::fmt::Display for Matrix {
