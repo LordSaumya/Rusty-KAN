@@ -1,6 +1,6 @@
-use crate::data_structures::{node::Node, edge::Edge, vector::Vector, matrix::Matrix};
+use crate::data_structures::{node::Node, vector::Vector, matrix::Matrix};
 use std::rc::Rc;
-use std::cell::RefCell;
+use std::cell::{RefCell, RefMut};
 
 /// A layer is a collection of nodes and its associated edges in a KAN.
 /// It is represented as a list of nodes.
@@ -52,35 +52,37 @@ impl Layer {
     /// 
     /// # Arguments
     /// 
-    /// * `input` - A vector representing the input values.
+    /// * `input` - A matrix where the entry (i, j) is the input to the j-th incoming edge for the i-th node.
     /// 
     /// # Returns
     /// 
-    /// * A matrix representing the value of the layer given the input values.
+    /// * A matrix representing the value of the layer given the input values, where the entry (i, j) is the value of the j-th outgoing edge for the i-th node.
     /// 
     /// # Example
-    /// 
+    ///  
     /// ```
     /// let layer = Layer::new(nodes);
     /// let input = Vector { elements: vec![0.0, 1.0, 2.0] };
     /// let value = layer.forward(input);
     /// ```
-    pub fn forward(&self, input: Vector) -> Matrix {
-        let mut result: Matrix = Matrix::zeros(self.nodes.len(), input.elements.len());
-        for (i, node) in self.nodes.iter().enumerate() {
-            let node_value: Vector = node.borrow().forward(&input);
-            result.set_row(i, node_value);
+    pub fn forward(&self, input: Matrix) -> Matrix {
+        let mut result: Matrix = Matrix::new(vec![]);
+        for i in 0..self.nodes.len() {
+            let mut node: RefMut<Node> = self.nodes[i].borrow_mut();
+            let sum: f64 = node.forward(&input[i]);
+            let result_vector: Vector = Vector::new(vec![sum; node.outgoing.len()]);
+            result.push(result_vector);
         }
         result
     }
-
-    /// The backward pass computes the gradients of the edges in the layer given the upstream gradients and the input values.
+    
+    /// The backward pass computes the gradients of the edges in the outgoing layer given the upstream gradients and the input values.
     /// 
     /// # Arguments
     /// 
-    /// * `input` - A vector representing the input values.
+    /// * `input` - A vector of length (num of nodes) representing the input values to the outgoing edges, where the i-th entry is the input to the i-th node.
     /// 
-    /// * `upstream_gradient` - A matrix representing the gradients from the next layer.
+    /// * `upstream_gradient` - A vector representing the gradients from the next layer, where the i-th entry is the gradient of the loss with respect to the outgoing edge of the i-th node.
     /// 
     /// # Returns
     /// 
@@ -89,13 +91,19 @@ impl Layer {
     /// # Example
     /// 
     /// ```
-    /// let layer = Layer::new(nodes);
-    /// let upstream_gradient = Matrix::zeros(3, 3);
-    /// layer.backward(upstream_gradient);
+    /// 
     /// ```
-    pub fn backward(&self, input: Vector, upstream_gradient: Matrix) -> Result<(), &str> {
+    pub fn backward(&self, input: Vector, upstream_gradient: Vector) -> Result<(), &str> {
+        if input.len() != self.nodes.len() {
+            panic!("The number of elements in the input vector must be equal to the number of nodes in the layer.");
+        }
+        if upstream_gradient.len() != self.nodes.len() {
+            panic!("The number of rows in the upstream gradient matrix must be equal to the number of nodes in the layer.");
+        }
+
         for (i, node) in self.nodes.iter().enumerate() {
-            node.borrow_mut().backward(input[i], &upstream_gradient[i]).unwrap_or_else(|err| {
+            let mut node: RefMut<Node> = node.borrow_mut();
+            node.backward(input[i], upstream_gradient[i]).unwrap_or_else(|err| {
                 println!("{}", err);
             });
         }
@@ -128,8 +136,3 @@ impl Layer {
         Ok(())
     }
 }
-
-
-
-
-
