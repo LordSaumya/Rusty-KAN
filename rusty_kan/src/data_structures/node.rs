@@ -90,7 +90,7 @@ impl Node {
     /// 
     /// * `t` - A parameter value between 0 and 1.
     /// 
-    /// * `upstream_gradient` - A vector of gradients from the outgoing edges.
+    /// * `upstream_gradient` - A scalar representing the gradient of the loss with respect to the value of the node at the given parameter value t.
     /// 
     /// # Returns
     /// 
@@ -100,10 +100,10 @@ impl Node {
     /// 
     /// ```
     /// let inputs = Vector::new(vec![0.0, 0.5, 1.0]);
-    /// let upstream_gradient = Vector::new(vec![1.0, 1.0, 1.0]);
+    /// let upstream_gradient = 0.25;
     /// node.backward(inputs, upstream_gradient);
     /// ```
-    pub fn backward(&mut self, t: f64, upstream_gradient: &Vector) -> Result<(), &'static str> {
+    pub fn backward(&mut self, t: f64, upstream_gradient: f64) -> Result<(), &'static str> {
         for edge in self.incoming.iter() {
             edge.borrow_mut().backward(t, upstream_gradient).unwrap();
         }
