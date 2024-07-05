@@ -105,15 +105,15 @@ fn edge_backward_pass() {
     let mut edge: Edge = Edge::new(0, 1, spline.clone(), 0);
 
     let t: f64 = 0.1;
-    let upstream_gradient: Vector = Vector::new(vec![1.0, 2.0, 3.0]);
+    let upstream_gradient: f64 = 1.0;
 
     // Checks if returned result type is ok
-    let _ = edge.backward(t, &upstream_gradient).unwrap();
+    let _ = edge.backward(t, upstream_gradient).unwrap();
 
     // Checks if gradient is ok
     let result_gradient: Vector = edge.gradient.clone();
     print!("Result Gradient: {}\n", result_gradient);
-    let expected_gradient: Vec<f64> = vec![1.0 * spline.basis(0, spline.degree, t), 2.0 * spline.basis(1, spline.degree, t), 3.0 * spline.basis(2, spline.degree, t)];
+    let expected_gradient: Vec<f64> = vec![1.0 * spline.basis(0, spline.degree, t), 1.0 * spline.basis(1, spline.degree, t), 1.0 * spline.basis(2, spline.degree, t)];
     for i in 0..result_gradient.elements.len() {
         assert_is_close!(result_gradient.elements[i], expected_gradient[i], 1e-3);
     }
@@ -129,12 +129,12 @@ fn edge_weight_update_pass() {
 
     let learning_rate: f64 = 0.1;
 
-    edge.backward(0.1, &Vector::new(vec![1.0, 2.0, 3.0])).unwrap();
+    edge.backward(0.1, 1.0).unwrap();
     edge.update_weights(learning_rate).unwrap();
 
     let result_control_points: Vector = edge.spline.control_points.clone();
     print!("Result Control Points: {}\n", result_control_points);
-    let expected_control_points: Vec<f64> = vec![1.0 - learning_rate * 1.0 * spline.basis(0, spline.degree, 0.1), 2.0 - learning_rate * 2.0 * spline.basis(1, spline.degree, 0.1), 3.0 - learning_rate * 3.0 * spline.basis(2, spline.degree, 0.1)];
+    let expected_control_points: Vec<f64> = vec![1.0 - learning_rate * 1.0 * spline.basis(0, spline.degree, 0.1), 2.0 - learning_rate * 1.0 * spline.basis(1, spline.degree, 0.1), 3.0 - learning_rate * 1.0 * spline.basis(2, spline.degree, 0.1)];
     for i in 0..result_control_points.elements.len() {
         assert_is_close!(result_control_points.elements[i], expected_control_points[i], 1e-3);
     }
@@ -161,7 +161,7 @@ fn edge_backward_fail() {
     let spline: BSpline = BSpline { control_points: control_points.clone(), knots: knots.clone(), degree: degree.clone(), memo: HashMap::new() };
     let mut edge: Edge = Edge::new(0, 1, spline.clone(), 0);
 
-    edge.backward(1.5, &Vector::new(vec![1.0, 2.0, 3.0])).unwrap();
+    edge.backward(1.5, 1.0).unwrap();
 }
 
 #[test]

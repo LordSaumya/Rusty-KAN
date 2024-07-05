@@ -92,27 +92,24 @@ impl Edge {
     /// 
     /// * `t` - A parameter value between 0 and 1.
     /// 
-    /// * `upstream_gradient` - A vector representing the gradient of the loss with respect to the value of the spline at the given parameter value t.
+    /// * `upstream_gradient` - A scalar representing the gradient of the loss with respect to the value of the spline at the given parameter value t.
     /// 
     /// # Example
     /// 
     /// ```
     /// let edge = Edge::new(start, end, spline, layer);
     /// let t = 0.5;
-    /// let upstream_gradient = Vector::new(vec![1.0, 0.0, 0.0]);
-    /// edge.backward(t, &upstream_gradient);
+    /// let upstream_gradient = 0.25;
+    /// edge.backward(t, upstream_gradient);
     /// ```
-    pub fn backward(&mut self, t: f64, upstream_gradient: &Vector) -> Result<(), &'static str> {
+    pub fn backward(&mut self, t: f64, upstream_gradient: f64) -> Result<(), &'static str> {
         if t < 0.0 || t > 1.0 {
             panic!("Parameter value t must be between 0 and 1.");
         }
-        if upstream_gradient.elements.len() != self.spline.control_points.len() {
-            panic!("The number of elements in the upstream gradient must be equal to the number of control points in the spline.");
-        }
-
+        
         let n: usize = self.spline.control_points.len();
         for i in 0..n {
-            self.gradient[i] = self.spline.basis(i, self.spline.degree, t) * upstream_gradient[i];
+            self.gradient[i] = self.spline.basis(i, self.spline.degree, t) * upstream_gradient;
         }
         
         Ok(())
