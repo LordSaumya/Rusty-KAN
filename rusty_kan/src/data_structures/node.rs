@@ -32,6 +32,10 @@ impl Node {
     /// let incoming_edges: Vec<Rc<RefCell<Edge>>> = vec![edge1, edge2].iter().map(|edge| Rc::new(RefCell::new(edge.clone()))).collect();
     /// let outgoing_edges: Vec<Rc<RefCell<Edge>>> = vec![edge3, edge4].iter().map(|edge| Rc::new(RefCell::new(edge.clone()))).collect();
     /// let layer = 0;
+    /// 
+    /// let node = Node::new(incoming_edges, outgoing_edges, layer);
+    /// 
+    /// ```
     pub fn new(incoming_edges: Vec<Rc<RefCell<Edge>>>, outgoing_edges: Vec<Rc<RefCell<Edge>>>, layer: usize) -> Node {
         Node { incoming: incoming_edges, outgoing: outgoing_edges, layer }
     }
@@ -46,7 +50,7 @@ impl Node {
     /// 
     /// ```
     /// let edge = Rc::new(RefCell::new(Edge::new(start, end, spline, layer)));
-    /// 
+    /// ```
     pub fn add_incoming(&mut self, edge: Rc<RefCell<Edge>>) {
         self.incoming.push(edge);
     }
@@ -71,12 +75,22 @@ impl Node {
     /// 
     /// # Arguments
     /// 
-    /// * `inputs` - A vector of values from the incoming edges.
+    /// * `inputs` - A vector of inputs to the incoming edges.
     /// 
     /// # Returns
     /// 
     /// * The sum of the incoming activations.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// let inputs = Vector { elements: vec![0.0, 1.0, 2.0] };
+    /// let value = node.forward(inputs);
+    /// ```
     pub fn forward(&mut self, inputs: &Vector) -> f64 {
+        if inputs.len() != self.incoming.len() {
+            panic!("The number of inputs must match the number of incoming edges.");
+        }
         let mut result: f64 = 0.0;
         for (i, edge) in self.incoming.iter().enumerate() {
             result += edge.borrow_mut().forward(inputs[i]);
@@ -84,7 +98,7 @@ impl Node {
         result
     }
 
-    /// Compute the gradients of the incoming edges for a given value of the parameter value.
+    /// Compute the gradients of the incoming edges for their inputs.
     /// 
     /// # Arguments
     /// 
@@ -99,13 +113,13 @@ impl Node {
     /// # Example
     /// 
     /// ```
-    /// let inputs = Vector::new(vec![0.0, 0.5, 1.0]);
+    /// let t = Vector { elements: vec![0.0, 0.5, 1.0] };
     /// let upstream_gradient = 0.25;
-    /// node.backward(inputs, upstream_gradient);
+    /// node.backward(t, upstream_gradient);
     /// ```
-    pub fn backward(&mut self, t: f64, upstream_gradient: f64) -> Result<(), &'static str> {
-        for edge in self.incoming.iter() {
-            edge.borrow_mut().backward(t, upstream_gradient).unwrap();
+    pub fn backward(&mut self, t: Vector, upstream_gradient: f64) -> Result<(), &'static str> {
+        for (i, edge) in self.incoming.iter().enumerate() {
+            edge.borrow_mut().backward(t[i], upstream_gradient).unwrap();
         }
         Ok(())
     }
@@ -129,7 +143,7 @@ impl Node {
     pub fn update_weights(&mut self, learning_rate: f64) -> Result<(), &'static str> {
         for edge in self.incoming.iter() {
             edge.borrow_mut().update_weights(learning_rate).unwrap_or_else(|err| {
-                println!("{}", err);
+                panic!("{}", err)
             });
         }
         Ok(())

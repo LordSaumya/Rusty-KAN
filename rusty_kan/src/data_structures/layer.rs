@@ -62,7 +62,7 @@ impl Layer {
     ///  
     /// ```
     /// let layer = Layer::new(nodes);
-    /// let input = Vector { elements: vec![0.0, 1.0, 2.0] };
+    /// let input = Matrix::new(vec![vec![1.0, 2.0], vec![3.0, 4.0]]);
     /// let value = layer.forward(input);
     /// ```
     pub fn forward(&self, input: Matrix) -> Matrix {
@@ -76,11 +76,11 @@ impl Layer {
         result
     }
     
-    /// The backward pass computes the gradients of the edges in the outgoing layer given the upstream gradients and the input values.
+    /// The backward pass computes the gradients of the edges in the incoming layer given the upstream gradients and the input values.
     /// 
     /// # Arguments
     /// 
-    /// * `input` - A vector of length (num of nodes) representing the input values to the outgoing edges, where the i-th entry is the input to the i-th node.
+    /// * `input` - A matrix of input values to the incoming edges of the layer, where the (i, j)-th entry is the input to the j-th incoming edge of the i-th node in the layer.
     /// 
     /// * `upstream_gradient` - A vector representing the gradients from the next layer, where the i-th entry is the gradient of the loss with respect to the outgoing edge of the i-th node.
     /// 
@@ -91,20 +91,23 @@ impl Layer {
     /// # Example
     /// 
     /// ```
-    /// 
+    /// let layer = Layer::new(nodes);
+    /// let input = Matrix::new(vec![vec![1.0, 2.0], vec![3.0, 4.0]]);
+    /// let upstream_gradient = Vector::new(vec![0.5, 0.25]);
+    /// layer.backward(input, upstream_gradient);
     /// ```
-    pub fn backward(&self, input: Vector, upstream_gradient: Vector) -> Result<(), &str> {
-        if input.len() != self.nodes.len() {
-            panic!("The number of elements in the input vector must be equal to the number of nodes in the layer.");
+    pub fn backward(&self, input: Matrix, upstream_gradient: Vector) -> Result<(), &str> {
+        if input.shape().0 != self.nodes.len() {
+            panic!("The number of rows in the input matrix must be equal to the number of nodes in the layer.");
         }
         if upstream_gradient.len() != self.nodes.len() {
-            panic!("The number of rows in the upstream gradient matrix must be equal to the number of nodes in the layer.");
+            panic!("The number of elements in the upstream gradient vector must be equal to the number of nodes in the layer.");
         }
 
         for (i, node) in self.nodes.iter().enumerate() {
             let mut node: RefMut<Node> = node.borrow_mut();
-            node.backward(input[i], upstream_gradient[i]).unwrap_or_else(|err| {
-                println!("{}", err);
+            node.backward(input[i].clone(), upstream_gradient[i]).unwrap_or_else(|err| {
+                panic!("{}", err)
             });
         }
         Ok(())
@@ -130,7 +133,7 @@ impl Layer {
     pub fn update_weights(&self, learning_rate: f64) -> Result<(), &str> {
         for node in self.nodes.iter() {
             node.borrow_mut().update_weights(learning_rate).unwrap_or_else(|err| {
-                println!("{}", err);
+                panic!("{}", err)
             });
         }
         Ok(())
