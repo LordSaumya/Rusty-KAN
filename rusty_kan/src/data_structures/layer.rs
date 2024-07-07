@@ -66,6 +66,9 @@ impl Layer {
     /// let value = layer.forward(input);
     /// ```
     pub fn forward(&self, input: Matrix) -> Matrix {
+        if input.shape().0 != self.nodes.len() {
+            panic!("The number of rows in the input matrix must be equal to the number of nodes in the layer.");
+        }
         let mut result: Matrix = Matrix::new(vec![]);
         for i in 0..self.nodes.len() {
             let mut node: RefMut<Node> = self.nodes[i].borrow_mut();
