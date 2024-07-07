@@ -163,3 +163,9 @@ impl Edge {
 fn silu(x: f64) -> f64 {
     x / (1.0 + (-x).exp())
 }
+
+impl std::fmt::Display for Edge {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "Edge(start: {}, end: {}, layer: {}, spline: {})", self.start, self.end, self.layer, self.spline)
+    }
+}

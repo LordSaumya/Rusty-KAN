@@ -28,6 +28,15 @@ impl BSpline {
     /// # Returns
     /// 
     /// * A B-spline with the given list of control points, specified degree, and uniform knots.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// let control_points: Vector = Vector { elements: vec![0.0, 1.0, 2.0, 3.0] };
+    /// let degree: usize = 2;
+    /// 
+    /// let spline = BSpline::new(control_points, degree);
+    /// ```
     pub fn new(control_points: Vector, degree: usize) -> BSpline {
         let n: usize = control_points.elements.len();
         let knots: Vector = Vector { elements: (0..n + degree + 1).map(|i| i as f64 / (n + degree) as f64).collect() };
@@ -69,6 +78,16 @@ impl BSpline {
     /// # Returns
     /// 
     /// * The value of the basis function at the given index, degree, and parameter value t.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// let i: usize = 0;
+    /// let degree: usize = 2;
+    /// let t: f64 = 0.5;
+    /// 
+    /// let basis = spline.basis(i, degree, t);
+    /// ```
     pub fn basis(&mut self, i: usize, degree: usize, t: f64) -> f64 {
         let hashmap_key: String = i.to_string() + " " + &degree.to_string() + " " + &t.to_string();
         if let Some(&result) = self.memo.get(hashmap_key.as_str()) {
@@ -94,5 +113,11 @@ impl BSpline {
             self.memo.insert(hashmap_key, left + right);
             left + right
         }
+    }
+}
+
+impl std::fmt::Display for BSpline {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "BSpline {{ control_points: {:?}, knots: {:?}, degree: {} }}", self.control_points, self.knots, self.degree)
     }
 }
