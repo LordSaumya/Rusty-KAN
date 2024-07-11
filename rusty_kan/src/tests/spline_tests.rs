@@ -60,18 +60,6 @@ fn spline_eval_pass() {
 }
 
 #[test]
-#[should_panic]
-fn spline_eval_fail() {
-    let control_points: Vector = Vector::new(vec![1.0, 2.0, 3.0]);
-    let knots: Vector = Vector::new(vec![0.0, 0.2, 0.4, 0.6, 0.8, 1.0]);
-    let degree: usize = 2;
-    let mut spline: BSpline = BSpline { control_points: control_points.clone(), knots: knots.clone(), degree: degree.clone(), memo: HashMap::new()};
-
-    // t < 0.0 -> should fail
-    let _ = spline.eval(-0.5);
-}
-
-#[test]
 fn spline_basis_pass() {
     let control_points: Vector = Vector::new(vec![1.0, 2.0, 3.0]);
     let knots: Vector = Vector::new(vec![0.0, 0.2, 0.4, 0.6, 0.8, 1.0]);

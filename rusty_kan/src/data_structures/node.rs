@@ -1,5 +1,5 @@
-use std::{cell::RefCell, rc::Rc};
-use crate::data_structures::{vector::Vector, edge::Edge};
+use std::{cell::RefCell, rc::Rc, vec};
+use crate::data_structures::{vector::Vector, edge::Edge, matrix::Matrix};
 
 /// A node is an intersection of edges in the network.
 /// It is represented as a list of incoming edges, a list of outgoing edges, and a layer index.
@@ -147,5 +147,24 @@ impl Node {
             });
         }
         Ok(())
+    }
+
+    /// Get the gradients of the incoming edges.
+    /// 
+    /// # Returns
+    /// 
+    /// * A Matrix of input gradients of the incoming edges.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// let gradients = node.get_incoming_gradients();
+    /// ```
+    pub fn get_incoming_gradients(&self) -> Matrix {
+        let mut gradients: Matrix = Matrix::new(vec![]);
+        for edge in self.incoming.iter() {
+            gradients.push(edge.borrow().gradient.clone());
+        }
+        gradients
     }
 }

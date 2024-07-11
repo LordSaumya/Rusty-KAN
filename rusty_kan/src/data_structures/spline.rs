@@ -53,10 +53,6 @@ impl BSpline {
     /// 
     /// * The value of the B-spline at the given parameter value t.
     pub fn eval(&mut self, t: f64) -> f64 {
-        if t < 0.0 || t > 1.0 {
-            panic!("Parameter value t must be between 0 and 1.");
-        }
-
         let n: usize = self.control_points.len();
         let mut result: f64 = 0.0;
         for i in 0..n {
@@ -92,9 +88,6 @@ impl BSpline {
         let hashmap_key: String = i.to_string() + " " + &degree.to_string() + " " + &t.to_string();
         if let Some(&result) = self.memo.get(hashmap_key.as_str()) {
             return result;
-        }
-        if t < 0.0 || t > 1.0 {
-            panic!("Parameter value t must be between 0 and 1.");
         }
 
         if degree == 0 {

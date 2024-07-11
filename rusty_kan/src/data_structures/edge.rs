@@ -103,10 +103,6 @@ impl Edge {
     /// edge.backward(t, upstream_gradient);
     /// ```
     pub fn backward(&mut self, t: f64, upstream_gradient: f64) -> Result<(), &'static str> {
-        if t < 0.0 || t > 1.0 {
-            panic!("Parameter value t must be between 0 and 1.");
-        }
-        
         let n: usize = self.spline.control_points.len();
         for i in 0..n {
             self.gradient[i] = self.spline.basis(i, self.spline.degree, t) * upstream_gradient;
