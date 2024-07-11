@@ -245,7 +245,7 @@ fn layer_backward_pass() {
     let inputs: Matrix = Matrix::new(vec![Vector::from(vec![0.1, 0.2]), Vector::from(vec![0.3, 0.4])]);
     let upstream_gradient: Vector = Vector::from(vec![0.4, 0.8]);
 
-    layer.backward(inputs.clone(), upstream_gradient.clone()).unwrap();
+    layer.backward(inputs.clone(), &upstream_gradient).unwrap();
 
     // Node 1:
     // Incoming edge 1
@@ -300,7 +300,7 @@ fn layer_backward_wrong_input_dims_fail() {
     let inputs: Matrix = Matrix::new(vec![Vector::from(vec![0.1, 0.2])]);
     let upstream_gradient: Vector = Vector::from(vec![0.4, 0.8]);
 
-    layer.backward(inputs.clone(), upstream_gradient.clone()).unwrap();
+    layer.backward(inputs.clone(), &upstream_gradient).unwrap();
 }
 
 #[test]
@@ -329,5 +329,5 @@ fn layer_backward_wrong_gradient_dims_fail() {
     let inputs: Matrix = Matrix::new(vec![Vector::from(vec![0.1, 0.2]), Vector::from(vec![0.3, 0.4])]);
     let upstream_gradient: Vector = Vector::from(vec![0.4]);
 
-    layer.backward(inputs.clone(), upstream_gradient.clone()).unwrap();
+    layer.backward(inputs.clone(), &upstream_gradient).unwrap();
 }

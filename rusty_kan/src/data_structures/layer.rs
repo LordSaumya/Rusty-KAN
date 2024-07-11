@@ -99,7 +99,7 @@ impl Layer {
     /// let upstream_gradient = Vector::new(vec![0.5, 0.25]);
     /// layer.backward(input, upstream_gradient);
     /// ```
-    pub fn backward(&self, input: Matrix, upstream_gradient: Vector) -> Result<(), &str> {
+    pub fn backward(&self, input: Matrix, upstream_gradient: &Vector) -> Result<(), &str> {
         if input.shape().0 != self.nodes.len() {
             panic!("The number of rows in the input matrix must be equal to the number of nodes in the layer.");
         }
