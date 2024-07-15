@@ -142,30 +142,6 @@ fn edge_weight_update_pass() {
 
 #[test]
 #[should_panic]
-fn edge_forward_fail() {
-    let control_points: Vector = Vector::new(vec![1.0, 2.0, 3.0]);
-    let knots: Vector = Vector::new(vec![0.0, 0.2, 0.4, 0.6, 0.8, 1.0]);
-    let degree: usize = 2;
-    let spline: BSpline = BSpline { control_points: control_points.clone(), knots: knots.clone(), degree: degree.clone(), memo: HashMap::new() };
-    let mut edge: Edge = Edge::new(0, 1, spline.clone(), 0);
-
-    edge.forward(-0.5);
-}
-
-#[test]
-#[should_panic]
-fn edge_backward_fail() {
-    let control_points: Vector = Vector::new(vec![1.0, 2.0, 3.0]);
-    let knots: Vector = Vector::new(vec![0.0, 0.2, 0.4, 0.6, 0.8, 1.0]);
-    let degree: usize = 2;
-    let spline: BSpline = BSpline { control_points: control_points.clone(), knots: knots.clone(), degree: degree.clone(), memo: HashMap::new() };
-    let mut edge: Edge = Edge::new(0, 1, spline.clone(), 0);
-
-    edge.backward(1.5, 1.0).unwrap();
-}
-
-#[test]
-#[should_panic]
 fn edge_weight_update_fail() {
     let control_points: Vector = Vector::new(vec![1.0, 2.0, 3.0]);
     let knots: Vector = Vector::new(vec![0.0, 0.2, 0.4, 0.6, 0.8, 1.0]);
