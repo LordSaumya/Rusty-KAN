@@ -157,10 +157,10 @@ impl Vector {
         Vector { elements: vec![1.0; size] }
     }
 
-    /// Create a new vector with the given size and all elements set to random values between 0 and 1.
+    /// Create a new vector with the given size and all elements normally distributed with mean 0 and standard deviation 1.
     pub fn random(size: usize) -> Vector {
-        let mut rng: rand::prelude::ThreadRng = rand::thread_rng();
-        Vector { elements: (0..size).map(|_| rng.gen_range(0.0..1.0)).collect() }
+        let mut rng = rand::thread_rng();
+        Vector { elements: (0..size).map(|_| rng.gen::<f64>()).collect() }
     }
 
     /// Return the length of the vector.
