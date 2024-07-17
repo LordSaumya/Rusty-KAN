@@ -3,6 +3,7 @@ use crate::data_structures::{vector::Vector, matrix::Matrix, node::Node, layer::
 use std::fmt::UpperExp;
 use std::rc::Rc;
 use std::cell::{RefCell, RefMut, Ref};
+use std::vec;
 
 /// A KAN is a collection of layers in a network.
 /// It is represented as a list of layers.
@@ -214,5 +215,113 @@ impl KAN {
             let layer: RefMut<Layer> = layer.borrow_mut();
             layer.update_weights(learning_rate).unwrap();
         }
+    }
+
+    /// Calculate the loss of the KAN given the input values and target value.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `input` - A vector representing the input values to the first layer.
+    /// 
+    /// * `target` - A scalar representing the target value.
+    /// 
+    /// # Returns
+    /// 
+    /// * A scalar representing the loss of the KAN given the input values and target value, calculated using mean squared error.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// let input = Vector::new(vec![1.0, 2.0]);
+    /// let target = 0.5;
+    /// 
+    /// let loss = kan.loss_single(input, target);
+    /// ```
+    pub fn loss_single(&self, input: Vector, target: f64) -> f64 {
+        let input_matrix: Matrix = Matrix::new(vec![input]);
+        let output: f64 = self.forward(input_matrix);
+        (output - target).powi(2)
+    }
+
+    /// Calculate the loss of the KAN given a list of input-target pairs.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `inputs` - A matrix where the ith row represents the input values to the first layer for the ith input-target pair.
+    /// * `targets` - A vector where the ith element represents the target value for the ith input-target pair.
+    /// 
+    /// # Returns
+    /// 
+    /// * A scalar representing the loss of the KAN given the input values and target values, calculated using mean squared error.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// let inputs = Matrix::new(vec![Vector::new(vec![1.0, 2.0]), Vector::new(vec![3.0, 4.0])]);
+    /// let targets = Vector::new(vec![0.5, 0.75]);
+    /// 
+    /// let loss = kan.loss(inputs, targets);
+    /// ```
+    pub fn loss(&self, inputs: Matrix, targets: Vector) -> f64 {
+        let mut loss: f64 = 0.0;
+        for (i, row) in inputs.rows.iter().enumerate() {
+            loss += self.loss_single(row.clone(), targets[i]);
+        }
+        loss/(inputs.rows.len() as f64)
+    }
+
+    /// Train the KAN on one input-target pair.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `input` - A vector representing the input values to the first layer.
+    /// * `target` - A scalar representing the target value.
+    /// * `learning_rate` - A scalar representing the learning rate.
+    /// 
+    /// # Returns
+    /// 
+    /// * A result indicating whether the training was successful, with the loss of the KAN given the input values and target value.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// let input = Vector::new(vec![1.0, 2.0]);
+    /// let target = 0.5;
+    /// let learning_rate = 0.01;
+    /// 
+    /// let result = kan.train(input, target, learning_rate).unwrap();
+    /// ```
+    pub fn train(&self, input: Vector, target: f64, learning_rate: f64) -> Result<f64, &'static str> {
+        let input_matrix: Matrix = Matrix::new(vec![input.clone()]);
+        self.backward(input_matrix, target)?;
+        self.update_edges(learning_rate);
+        Ok(self.loss_single(input, target))
+    }
+
+    /// Train the KAN on a list of input-target pairs.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `inputs` - A matrix where the ith row represents the input values to the first layer for the ith input-target pair.
+    /// * `targets` - A vector where the ith element represents the target value for the ith input-target pair.
+    /// * `learning_rate` - A scalar representing the learning rate.
+    /// 
+    /// # Returns
+    /// 
+    /// * A result indicating whether the training was successful, with the loss of the KAN given the input values and target values.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// let inputs = Matrix::new(vec![Vector::new(vec![1.0, 2.0]), Vector::new(vec![3.0, 4.0])]);
+    /// let targets = Vector::new(vec![0.5, 0.75]);
+    /// let learning_rate = 0.01;
+    /// 
+    /// let result = kan.train_batch(inputs, targets, learning_rate).unwrap();
+    /// ```
+    pub fn train_batch(&self, inputs: Matrix, targets: Vector, learning_rate: f64) -> Result<f64, &'static str> {
+        self.backward(inputs.clone(), targets[0])?;
+        self.update_edges(learning_rate);
+        Ok(self.loss(inputs, targets))
     }
 }
