@@ -192,4 +192,27 @@ impl KAN {
 
         Ok(())
     }
+
+    /// Update the activation functions of the edges in the KAN.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `learning_rate` - A scalar representing the learning rate.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// let learning_rate = 0.01;
+    /// 
+    /// kan.update_edges(learning_rate);
+    /// ```
+    pub fn update_edges(&self, learning_rate: f64) {
+        if learning_rate <= 0.0 {
+            panic!("Learning rate must be positive.");
+        }
+        for layer in self.layers.iter() {
+            let layer: RefMut<Layer> = layer.borrow_mut();
+            layer.update_weights(learning_rate).unwrap();
+        }
+    }
 }
