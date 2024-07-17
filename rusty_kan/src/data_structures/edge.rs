@@ -42,6 +42,36 @@ impl Edge {
         Edge { start, end, spline, gradient, layer }
     }
 
+    /// Create a new edge for the standard layer with a given start index and end index, where the spline is initialised with degree 2 and 5 normally distributed control points with mean 0 and standard deviation 1.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `start` - An index in the origin layer.
+    /// 
+    /// * `end` - An index in the destination layer.
+    ///
+    /// * `layer` - A layer index corresponding to the origin layer.
+    /// 
+    /// # Returns
+    /// 
+    /// * An edge with the given start index, end index, and spline.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// let start = 0;
+    /// let end = 1;
+    /// let layer = 0;
+    /// let edge = Edge::standard(start, end, layer);
+    /// ```
+    pub fn standard(start: usize, end: usize, layer: usize) -> Edge {
+        let control_points: Vector = Vector::random(5);
+        let degree: usize = 2;
+        let spline: BSpline = BSpline::new(control_points, degree);
+        Edge::new(start, end, spline, layer)
+    }
+
+
     /// The forward pass computes the value of the spline at the given parameter value t and adds the value of the basis function (sigmoid linear unit).
     /// 
     /// # Arguments

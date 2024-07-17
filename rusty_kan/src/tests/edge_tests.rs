@@ -32,6 +32,23 @@ fn edge_new_pass() {
 }
 
 #[test]
+fn edge_standard_pass() {
+    let start: usize = 0;
+    let end: usize = 1;
+    let layer: usize = 0;
+
+    let edge: Edge = Edge::standard(start, end, layer);
+
+    assert_eq!(edge.start, start);
+    assert_eq!(edge.end, end);
+    assert_eq!(edge.layer, layer);
+
+    assert_eq!(edge.spline.control_points.len(), 5);
+    assert_eq!(edge.spline.knots.len(), edge.spline.control_points.len() + edge.spline.degree + 1);
+    assert_eq!(edge.spline.degree, 2);
+}
+
+#[test]
 fn edge_forward_pass() {
     let control_points: Vector = Vector::new(vec![1.0, 2.0, 3.0]);
     let knots: Vector = Vector::new(vec![0.0, 0.2, 0.4, 0.6, 0.8, 1.0]);
