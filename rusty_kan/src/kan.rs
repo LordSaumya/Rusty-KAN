@@ -34,6 +34,67 @@ impl KAN {
         KAN { layers }
     }
 
+    /// Create a new KAN of standard shape (n inputs, 1 hidden layer with m nodes, 1 output).
+    /// The control points of the edges are normally distributed with mean 0 and standard deviation 1.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `n` - A scalar representing the number of inputs.
+    /// 
+    /// * `m` - A scalar representing the number of nodes in the hidden layer.
+    /// 
+    /// # Returns
+    /// 
+    /// * A KAN with the given number of inputs and nodes in the hidden layer.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// let n = 2;
+    /// let m = 3;
+    /// 
+    /// let kan = KAN::standard(n, m);
+    /// ```
+    pub fn standard(n: usize, m: usize) -> KAN {
+        let mut layers: Vec<Rc<RefCell<Layer>>> = Vec::new();
+
+        // Nodes in the hidden layer
+        let mut hidden_nodes: Vec<Rc<RefCell<Node>>> = Vec::with_capacity(m);
+        for i in 0..m {
+            // Incoming edges
+            let mut incoming_edges: Vec<Rc<RefCell<Edge>>> = Vec::with_capacity(n);
+            for j in 0..n {
+                let edge = Rc::new(RefCell::new(Edge::standard(j, i, 1)));
+                incoming_edges.push(edge);
+            }
+
+            // Outgoing edge
+            let outgoing_edge = Rc::new(RefCell::new(Edge::standard(i, 0, 2)));
+
+            // Node
+            let node = Rc::new(RefCell::new(Node::new(incoming_edges, vec![outgoing_edge], 1)));
+            hidden_nodes.push(node);
+        }
+
+        let hidden_layer = Rc::new(RefCell::new(Layer::new(hidden_nodes)));
+
+        // Output node
+        let mut incoming_edges: Vec<Rc<RefCell<Edge>>> = Vec::with_capacity(m);
+        for i in 0..m {
+            let hidden_node: Rc<RefCell<Node>> = hidden_layer.borrow().nodes[i].clone();
+            let outgoing_edge: Rc<RefCell<Edge>> = hidden_node.borrow().outgoing[0].clone();
+            incoming_edges.push(outgoing_edge);
+        }
+        let output_node = Rc::new(RefCell::new(Node::new(incoming_edges, Vec::new(), 2)));
+        
+        let output_layer = Rc::new(RefCell::new(Layer::new(vec![output_node])));
+
+        layers.push(hidden_layer);
+        layers.push(output_layer);
+        
+        KAN::new(layers)
+    }
+
     /// Add a layer to the KAN.
     /// 
     /// # Arguments
