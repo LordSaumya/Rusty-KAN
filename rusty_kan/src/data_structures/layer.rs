@@ -73,6 +73,7 @@ impl Layer {
         for i in 0..self.nodes.len() {
             let mut node: RefMut<Node> = self.nodes[i].borrow_mut();
             let sum: f64 = node.forward(&input[i]);
+            println!("Node {}: {}", i, sum);
             let result_vector: Vector = Vector::new(vec![sum; node.outgoing.len()]);
             result.push(result_vector);
         }

@@ -1,6 +1,4 @@
-use crate::data_structures::layer;
 use crate::data_structures::{vector::Vector, matrix::Matrix, node::Node, layer::Layer, edge::Edge};
-use std::fmt::UpperExp;
 use std::rc::Rc;
 use std::cell::{RefCell, RefMut, Ref};
 use std::vec;
@@ -58,15 +56,34 @@ impl KAN {
     /// ```
     pub fn standard(n: usize, m: usize) -> KAN {
         let mut layers: Vec<Rc<RefCell<Layer>>> = Vec::new();
+        
+        // Input layer nodes (nodes with one incoming edge and m outgoing edges to all nodes in the hidden layer)
+        let mut input_nodes: Vec<Rc<RefCell<Node>>> = Vec::with_capacity(n);
+        for i in 0..n {
+            // Incoming edge
+            let incoming_edge: Rc<RefCell<Edge>> = Rc::new(RefCell::new(Edge::standard(i, i, 0)));
+
+            // Outgoing edges
+            let mut outgoing_edges: Vec<Rc<RefCell<Edge>>> = Vec::with_capacity(m);
+            for j in 0..m {
+                let edge: Rc<RefCell<Edge>> = Rc::new(RefCell::new(Edge::standard(i, j, 1)));
+                outgoing_edges.push(edge);
+            }
+
+            // Node
+            let node = Rc::new(RefCell::new(Node::new(vec![incoming_edge], outgoing_edges, 0)));
+            input_nodes.push(node);
+        }
+        
 
         // Nodes in the hidden layer
         let mut hidden_nodes: Vec<Rc<RefCell<Node>>> = Vec::with_capacity(m);
         for i in 0..m {
             // Incoming edges
-            let mut incoming_edges: Vec<Rc<RefCell<Edge>>> = Vec::with_capacity(n);
+            let mut incoming_edges: Vec<Rc<RefCell<Edge>>>= Vec::with_capacity(n);
             for j in 0..n {
-                let edge = Rc::new(RefCell::new(Edge::standard(j, i, 1)));
-                incoming_edges.push(edge);
+                let incoming_edge: Rc<RefCell<Edge>> = input_nodes[j].borrow().outgoing[i].clone();
+                incoming_edges.push(incoming_edge);
             }
 
             // Outgoing edge
@@ -131,11 +148,12 @@ impl KAN {
     /// ```
     pub fn forward(&self, input: Matrix) -> f64 {
         let mut output: Matrix = input.clone();
-        for layer in self.layers.iter() {
+        for (i, layer) in self.layers.iter().enumerate() {
+            println!("Layer {}", i);
             let layer: Ref<Layer> = layer.borrow();
+            println!("Output: {:?}", output);
             output = layer.forward(output);
         }
-        
         output[0][0] // Return the scalar value of the output matrix.
     }
 
@@ -162,7 +180,7 @@ impl KAN {
     pub fn backward(&self, input: Matrix, target: f64) -> Result<(), &'static str> {
         // Forward pass and save intermediate values
         let mut layer_outputs: Vec<Matrix> = Vec::new();
-        let mut current_output = input.clone();
+        let mut current_output: Matrix = input.clone();
         for layer in self.layers.iter() {
             let layer: Ref<Layer> = layer.borrow();
             current_output = layer.forward(current_output.clone());
